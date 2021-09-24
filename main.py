@@ -21,11 +21,11 @@ verbose: bool
 
 Examples
 --------
-test = UsosFilter('https://rejestracja.usos.uw.edu.pl/catalogue.php?rg=0000-2021-OG-UN')
+test = USOSFilter('https://rejestracja.usos.uw.edu.pl/catalogue.php?rg=0000-2021-OG-UN')
 test.add_condition(lambda x: int(x['Punkty ECTS']) >= 4)
 test.show()
 """
-class UsosFilter:
+class USOSFilter:
     
     def __init__(self, url, expired=False, *, verbose=False):
         self._url = url
