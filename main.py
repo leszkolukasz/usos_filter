@@ -22,7 +22,7 @@ verbose: bool
 Examples
 --------
 test = USOSFilter('https://rejestracja.usos.uw.edu.pl/catalogue.php?rg=0000-2021-OG-UN')
-test.add_condition(lambda x: int(x['Punkty ECTS']) >= 4)
+test.add_condition(lambda x: float(x['Punkty ECTS']) >= 4)
 test.show()
 """
 class USOSFilter:
