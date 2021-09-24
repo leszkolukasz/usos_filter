@@ -23,7 +23,7 @@ Examples
 --------
 test = UsosFilter('https://rejestracja.usos.uw.edu.pl/catalogue.php?rg=0000-2021-OG-UN')
 test.add_condition(lambda x: int(x['Punkty ECTS']) >= 4)
-test.filter()
+test.show()
 """
 class UsosFilter:
     
@@ -32,6 +32,7 @@ class UsosFilter:
         self._expired = expired
         self.conditions = []
         self._verbose = verbose
+        self._total = 0
 
         # Filter groups with no seats left
         self.add_condition(lambda data: ((fs := data['Liczba miejsc (zarejestrowani/limit)'].split('/'))[0] == fs[1]) == self._expired)
@@ -48,11 +49,15 @@ class UsosFilter:
         return html
 
     # Use this if you want to show filtered groups
-    def filter(self, url=None):
-        if url is None:
-            url = self._url
+    def show(self):
+        self._total = 0
+        self._filter(self._url)
+        print('*'*75)
+        print(f'Found total of {self._total} results')
+    
+    def _filter(self, url=None):
         html = self._get_html(url)
-        if(url is None):
+        if(html is None):
             return
 
         if self._verbose:
@@ -69,7 +74,7 @@ class UsosFilter:
 
     def _filter_list(self, url, links):
         for link in links:
-            self.filter('https://rejestracja.usos.uw.edu.pl/' + link['href'])
+            self._filter('https://rejestracja.usos.uw.edu.pl/' + link['href'])
 
     def _filter_groups(self, url, links):
         for link in links:
@@ -78,7 +83,7 @@ class UsosFilter:
 
     def _filter_group(self, url):
         html = self._get_html(url)
-        if(url is None):
+        if(html is None):
             return
 
         parsed = BeautifulSoup(html, 'html.parser').select('table[class="wrnav stretch"]')[0]
@@ -104,6 +109,8 @@ class UsosFilter:
     def _print(self, group_info):
         if 'Aktualna tura' in group_info:
             del group_info['Aktualna tura']
+        self._total += 1
+
         print('-'*75)
         pprint.pprint(dict(group_info))
         print('-'*75)
