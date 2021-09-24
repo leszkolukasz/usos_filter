@@ -1,9 +1,30 @@
-from bs4 import BeautifulSoup
-import pprint
-from collections import defaultdict
-import requests
-import re
+""" This file defines easy to use class that filter USOS database to your own liking """
 
+from collections import defaultdict
+import pprint
+import re
+import requests
+
+from bs4 import BeautifulSoup
+
+"""
+This class filters groups from USOS databse according to custom rules
+
+Parameters
+----------
+url: str
+    url of the list to filter from
+expired: bool
+    True if you want to show groups with all seats taken, False otherwise (default: False)
+verbose: bool
+    True if you want to see currently search url, False othrwise (default: False)
+
+Examples
+--------
+test = UsosFilter('https://rejestracja.usos.uw.edu.pl/catalogue.php?rg=0000-2021-OG-UN')
+test.add_condition(lambda x: int(x['Punkty ECTS']) >= 4)
+test.filter()
+"""
 class UsosFilter:
     
     def __init__(self, url, expired=False, *, verbose=False):
@@ -12,8 +33,10 @@ class UsosFilter:
         self.conditions = []
         self._verbose = verbose
 
+        # Filter groups with no seats left
         self.add_condition(lambda data: ((fs := data['Liczba miejsc (zarejestrowani/limit)'].split('/'))[0] == fs[1]) == self._expired)
 
+    # Use this if you want to add custom condition
     def add_condition(self, condition):
         self.conditions.append(condition)
 
@@ -24,6 +47,7 @@ class UsosFilter:
             return None
         return html
 
+    # Use this if you want to show filtered groups
     def filter(self, url=None):
         if url is None:
             url = self._url
@@ -83,8 +107,3 @@ class UsosFilter:
         print('-'*75)
         pprint.pprint(dict(group_info))
         print('-'*75)
-
-
-test = UsosFilter('https://rejestracja.usos.uw.edu.pl/catalogue.php?rg=0000-2021-OG-UN')
-test.add_condition(lambda x: int(x['Punkty ECTS']) >= 4)
-test.filter()
