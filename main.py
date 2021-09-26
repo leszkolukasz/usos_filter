@@ -1,9 +1,12 @@
 """ This file defines easy to use class that filter USOS database to your own liking """
 
-from collections import defaultdict
 import pprint
 import re
+import numpy as np
 import requests
+from datetime import time
+
+np.vectorize
 
 from bs4 import BeautifulSoup
 
@@ -22,7 +25,7 @@ verbose: bool
 Examples
 --------
 test = USOSFilter('https://rejestracja.usos.uw.edu.pl/catalogue.php?rg=0000-2021-OG-UN')
-test.add_condition(lambda x: float(x['Punkty ECTS']) >= 4)
+test.add_condition(lambda x: float(x['ects']) >= 4)
 test.show()
 """
 class USOSFilter:
@@ -71,7 +74,6 @@ class USOSFilter:
         if (links := parsed.find_all('script')) is not None:
             self._filter_groups(url, links)
         
-
     def _filter_list(self, url, links):
         for link in links:
             self._filter('https://rejestracja.usos.uw.edu.pl/' + link['href'])
@@ -87,7 +89,7 @@ class USOSFilter:
             return
 
         parsed = BeautifulSoup(html, 'html.parser').select('table[class="wrnav stretch"]')[0]
-        subject_data = defaultdict(str)
+        group_info = dict()
         for table_row in parsed.children:
             try:
                 name = table_row.contents[1].text
@@ -95,22 +97,79 @@ class USOSFilter:
             except Exception:
                 pass
             else:
-                subject_data[name] = data
-        subject_data['url'] = url
+                group_info[name] = data
+        group_info['url'] = url
+
+        group_info = self._clean_data(group_info)
         
         for condition in self.conditions:
             try:
-                if not condition(subject_data):
+                if not condition(group_info):
                     return
             except Exception:
                 pass
-        self._print(subject_data)
+        self._print(group_info)
 
-    def _print(self, group_info):
+    def _clean_data(self, group_info):
         if 'Aktualna tura' in group_info:
             del group_info['Aktualna tura']
-        self._total += 1
 
+        move_from = ['Kod przedmiotu', 'Język wykładowy', 'Liczba godzin', 'Nazwa przedmiotu', 'Punkty ECTS', 'Typ zajęć', 'Cykl dydaktyczny']
+        move_to = ['id', 'language', 'span', 'name', 'ects', 'type', 'term']
+        move_to_type = [str, str, float, str, float, str, str]
+
+        for from_key, to_key, to_type in zip(move_from, move_to, move_to_type):
+            try:
+                group_info[to_key] = to_type(group_info[from_key])
+            except Exception:
+                group_info[to_key] = -1. if to_type is float else 'unknown'
+            finally:
+                if from_key in group_info:
+                    del group_info[from_key]
+        try:
+            group_info['seats'] = (float((tp := group_info['Liczba miejsc (zarejestrowani/limit)'].split('/'))[0]), float(tp[1]))
+        except Exception:
+            group_info['seats'] = (-1., -1.)
+        finally:
+            if 'Liczba miejsc (zarejestrowani/limit)' in group_info:
+                del group_info['Liczba miejsc (zarejestrowani/limit)']
+        try:
+            group_info['venue'] = ' '.join(word.strip() for word in group_info['Miejsce'].split(' ')[:-1])
+        except Exception:
+            group_info['venue'] = 'unknown'
+        finally:
+            if 'Miejsce' in group_info:
+                del group_info['Miejsce']
+        try:
+            group_info['cost'] = float(group_info['Koszt'].split(' ')[0])
+        except Exception:
+            group_info['cost'] = 0.
+        finally:
+            if 'Koszt' in group_info:
+                del group_info['Koszt']
+        try:
+            group_info['time'] = []
+            times = group_info['Termin'].split(', ')
+            for t in times:
+                day, _, hour = t.split(' ')
+                group_info['time'].append((day.lower(), time.fromisoformat((h := hour.split('-'))[0]), time.fromisoformat(h[1])))
+        except Exception:
+           pass
+        finally:
+            if 'Termin' in group_info:
+                del group_info['Termin']
+        try:
+            group_info['lecturer'] = group_info['Prowadzący'].split(', ')
+        except Exception:
+            group_info['lecturer'] = []
+        finally:
+            if 'Prowadzący' in group_info:
+                del group_info['Prowadzący']
+
+        return group_info
+
+    def _print(self, group_info):
+        self._total += 1
         print('-'*75)
         pprint.pprint(dict(group_info))
         print('-'*75)
