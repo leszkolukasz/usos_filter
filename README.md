@@ -30,27 +30,30 @@ Now that you have instance you need to add custom filters. To do that create a f
 #### Examples:
 ```
 filter = UsosFilter('https://rejestracja.usos.uw.edu.pl/catalogue.php?rg=0000-2021-OG-UN')
-filter.add_condition(lambda x: int(x['Punkty ECTS']) >= 4) # Show groups with ECTS score >= 4
-filter.add_condition(lambda x: int(x['Liczba godzin']) >= 30) # Show groups that take at least 30 hours total
-filter.add_condition(lambda x: x['Prowadzący'] == 'XYZ' # Show all groups run by person XYZ
-filter.add_condition(lambda x: x['Język wykładowy'] == 'polski' # Show groups being taught in polish language
+filter.add_condition(lambda x: int(x['ects']) >= 4) # Show groups with ECTS score >= 4
+filter.add_condition(lambda x: int(x['span']) >= 30) # Show groups that take at least 30 hours total
+filter.add_condition(lambda x: x['lecturer'] == 'xyz' # Show all groups run by person xyz
+filter.add_condition(lambda x: x['language'] == 'polski' # Show groups being taught in polish language
 ```
 
 #### All dictionary keys:
-* 'Cykl dydaktyczny' - e.g. 'Semestr zimowy 2021/22'
-* 'Język wykładowy' - e.g. 'polski'
-* 'Kod przedmiotu' - e.g. '3221-FBA-KLB-OG'
-* 'Koszt' - e.g. '15 żetonów typu OG'
-* 'Liczba godzin' - e.g. '15'
-* 'Liczba miejsc (zarejestrowani/limit)' - e.g. '0/15'
-* 'Nazwa przedmiotu' - e.g. 'Kalejdoskop literatury białoruskiej'
-* 'Prowadzący' - e.g. 'dr Jan Kowalski'
-* 'Punkty ECTS' - e.g. '4'
-* 'Termin' - e.g. 'Czwartek  15:00-16:30'
-* 'Typ zajęć' - e.g. 'Ćwiczenia'
-* 'url' - e.g. 'https://rejestracja.usos.uw.edu.pl/course.php?rg=0000-2021-OG-UN&group=0000-OG&subject=3221-FBA-KLB-OG&cdyd=2021Z&full=0&course_id=464876&gr_no=1'
+* 'term' (str) - term when the subject is happening e.g. 'semestr zimowy 2021/22'
+* 'language' (str) - language in which the subject is taugth e.g. 'polski'
+* 'id' (str) - code of the subject e.g. '3221-FBA-KLB-OG'
+* 'cost' (float) - cost of the subject in żetony e.g. 15.0
+* 'span' (float) - total span of the subject in hours e.g. 30.0
+* 'seats' (tuple(float, float)) - seats taken vs all available seats e.g. (10., 15.)
+* 'name' (str) - name of the subject e.g. 'kalejdoskop literatury białoruskiej'
+* 'lecturer' (list(str)) - name of the lecturer (may be more than one) e.g. ['dr Jan Kowalski']
+* 'ects' (float) - ects score e.g. 4.0
+* 'time' (list(tuple(str, datetime.time, datetime.time))) - time when the subject is happening; subsequent elements of the tuple are: name of the weekday, starting time, finishing time e.g. ['czwartek'. datetime.time('10:00'), datetime.time('11:30')]
+* 'type' (str) - type of the subject e.g. 'ćwiczenia'
+* 'url' - (str) url to the subject page in USOS e.g. 'https://rejestracja.usos.uw.edu.pl/course.php?rg=0000-2021-OG-UN&group=0000-OG&subject=3221-FBA-KLB-OG&cdyd=2021Z&full=0&course_id=464876&gr_no=1'
+* 'venue' (str) - place where the subject is happening e.g. 'Gmach Audytoryjny, Warszawa, ul. Krakowskie Przedmieście 26/28'
 
-All keys and values are stored as strings, thus, sometimes you need to cast data to different types. Whenever you need to do this, please, try to make it as general as possible. Some values have many formats e.g. 'Punkty ECTS' can be equal to '3.5'. Because of that its better to cast to float, rather than int. If at any point casting fails, or your filter throws exception because of strange data format script will mute the exception, and proceed as if it never happened.
+Some subjects lack specific data or have this data in strange format. It these cases values for this data were replaced with 'unknown' or -1, but I could have ommited some cases. If your filter throws exception because of strange data format script will mute the exception, and proceed as if it never happened.
+
+String are in lowercase except for lecturers, id, url and venue.
 
 Finally, to show the results run show() method:
 ```
