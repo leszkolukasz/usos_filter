@@ -121,6 +121,8 @@ class USOSFilter:
         for from_key, to_key, to_type in zip(move_from, move_to, move_to_type):
             try:
                 group_info[to_key] = to_type(group_info[from_key])
+                if to_key in ['language', 'name', 'type', 'term']:
+                    group_info[to_key] = group_info[to_key].lower()
             except Exception:
                 group_info[to_key] = -1. if to_type is float else 'unknown'
             finally:
