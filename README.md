@@ -61,4 +61,4 @@ It may take up to a few minutes, depending on the size of the list and your inte
 
 ## Notice
 
-This script was tested only for University for Warsaw, therefore, I don't know if it works for other univerities as well.
+This script was tested only for University for Warsaw, therefore, I don't know if it works for other universities as well.
