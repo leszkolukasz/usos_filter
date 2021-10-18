@@ -1,14 +1,15 @@
 """ This file defines easy to use class that filter USOS database to your own liking """
 
-import pprint
 import re
-import numpy as np
 import requests
+import datetime
 from datetime import time
-
-np.vectorize
+import logging
 
 from bs4 import BeautifulSoup
+from rich import print
+
+logging.basicConfig(filename='exceptions.log')
 
 """
 This class filters groups from USOS databse according to custom rules
@@ -38,7 +39,7 @@ class USOSFilter:
         self._total = 0
 
         # Filter groups with no seats left
-        self.add_condition(lambda data: ((fs := data['Liczba miejsc (zarejestrowani/limit)'].split('/'))[0] == fs[1]) == self._expired)
+        self.add_condition(lambda data: (data['seats'][0] == data['seats'][1]) == self._expired)
 
     # Use this if you want to add custom condition
     def add_condition(self, condition):
@@ -68,9 +69,9 @@ class USOSFilter:
 
         parsed = BeautifulSoup(html, 'html.parser')
         if (links := parsed.select('.odd_row a')) is not None:
-            self._filter_list(url, links)
+            self._filter_list(url, links[::2])
         if (links := parsed.select('.even_row a')) is not None:
-            self._filter_list(url, links)
+            self._filter_list(url, links[::2])
         if (links := parsed.find_all('script')) is not None:
             self._filter_groups(url, links)
         
@@ -106,8 +107,8 @@ class USOSFilter:
             try:
                 if not condition(group_info):
                     return
-            except Exception:
-                pass
+            except Exception as e:
+                logging.warning(e)
         self._print(group_info)
 
     def _clean_data(self, group_info):
@@ -123,29 +124,33 @@ class USOSFilter:
                 group_info[to_key] = to_type(group_info[from_key])
                 if to_key in ['language', 'name', 'type', 'term']:
                     group_info[to_key] = group_info[to_key].lower()
-            except Exception:
+            except Exception as e:
                 group_info[to_key] = -1. if to_type is float else 'unknown'
+                logging.warning(e)
             finally:
                 if from_key in group_info:
                     del group_info[from_key]
         try:
             group_info['seats'] = (float((tp := group_info['Liczba miejsc (zarejestrowani/limit)'].split('/'))[0]), float(tp[1]))
-        except Exception:
+        except Exception as e:
             group_info['seats'] = (-1., -1.)
+            logging.warning(e)
         finally:
             if 'Liczba miejsc (zarejestrowani/limit)' in group_info:
                 del group_info['Liczba miejsc (zarejestrowani/limit)']
         try:
             group_info['venue'] = ' '.join(word.strip() for word in group_info['Miejsce'].split(' ')[:-1])
-        except Exception:
+        except Exception as e:
             group_info['venue'] = 'unknown'
+            logging.warning(e)
         finally:
             if 'Miejsce' in group_info:
                 del group_info['Miejsce']
         try:
             group_info['cost'] = float(group_info['Koszt'].split(' ')[0])
-        except Exception:
+        except Exception as e:
             group_info['cost'] = 0.
+            logging.warning(e)
         finally:
             if 'Koszt' in group_info:
                 del group_info['Koszt']
@@ -154,16 +159,17 @@ class USOSFilter:
             times = group_info['Termin'].split(', ')
             for t in times:
                 day, _, hour = t.split(' ')
-                group_info['time'].append((day.lower(), time.fromisoformat((h := hour.split('-'))[0]), time.fromisoformat(h[1])))
-        except Exception:
-           pass
+                group_info['time'].append((day.lower(), time.fromisoformat((h := hour.split('-'))[0].ljust(2, '0')), time.fromisoformat(h[1].ljust(2, '0'))))
+        except Exception as e:
+           logging.warning(e)
         finally:
             if 'Termin' in group_info:
                 del group_info['Termin']
         try:
             group_info['lecturer'] = group_info['Prowadzący'].split(', ')
-        except Exception:
+        except Exception as e:
             group_info['lecturer'] = []
+            logging.warning(e)
         finally:
             if 'Prowadzący' in group_info:
                 del group_info['Prowadzący']
@@ -173,5 +179,5 @@ class USOSFilter:
     def _print(self, group_info):
         self._total += 1
         print('-'*75)
-        pprint.pprint(dict(group_info))
+        print(group_info)
         print('-'*75)
