@@ -1,4 +1,6 @@
 # USOS filter (for University of Warsaw)
+![license](https://img.shields.io/github/license/leszkolukasz/usos_filter.svg)
+![status](https://img.shields.io/badge/status-finished-green)
 
 Do you find USOS subject selection to be tedious and lacking basic filter settings? Well, this script will solve all your problems. USOS filter facilitates usage of custom filtering option like showing only subject with specific ECTS score, or subject taught at specific venue.
 
