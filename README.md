@@ -11,6 +11,8 @@ To use the scipt you need to install all required dependencies using the followi
 pip install -r requirements.txt
 ```
 
+Project was tested with python 3.10 and I don't guarantee that it will work with newer python releases.
+
 ## Usage
 
 To use the scipt you will need to directly edit main.py file. At the bottom of the file create new instance of USOSFilter class. With this instance you can add new filter options, and print all found subject.
