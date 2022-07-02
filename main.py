@@ -1,4 +1,4 @@
-"""Here you can defines you custom filter rules"""
+"""Here you can define your custom filter rules"""
 
 from filter import USOSFilter
 
