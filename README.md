@@ -66,6 +66,12 @@ filter.show()
 
 It may take up to a few minutes, depending on the size of the list and your internet connection. Scipt will recursively iterate over any found sublist, and will print all found groups.
 
+## Gallery
+
+Here is an output of running filter in verbose mode:
+
+![demo](https://github.com/leszkolukasz/usos_filter/blob/main/github_data/demo.png?raw=true)
+
 ## Notice
 
 This script was tested only for University for Warsaw, therefore, I don't know if it works for other universities as well.
