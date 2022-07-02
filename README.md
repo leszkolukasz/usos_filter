@@ -70,7 +70,7 @@ It may take up to a few minutes, depending on the size of the list and your inte
 
 Here is an output of running filter in verbose mode:
 
-![demo](https://github.com/leszkolukasz/usos_filter/blob/main/github_data/demo.png?raw=true)
+![demo](https://github.com/leszkolukasz/usos_filter/blob/main/readme_files/demo.png?raw=true)
 
 ## Notice
 
